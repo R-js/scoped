@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scoped - A GPU story</title>
+  <script src="https://unpkg.com/gpu.js@1.8.1/bin/gpu.js"></script>
+  <script src="data.js"></script>
+  <script src="cpu-function.js"></script>
+  <script src="gpu-function.js"></script>
+  <script src="gpu-function-exported.js"></script>
+  <script src="gpu-function-raw.js"></script>
+</head>
+<body>
+  <pre id="out"></pre>
+</body>
+<script>
+  const out = document.getElementById('out');
+  function log(value) {
+    out.innerHTML += JSON.stringify(value, null, 2) + '\n';
+  }
+</script>
+<script>
+  (() => {
+    log('cpu version:');
+    log(scoped(a, b, c, lda, ldb, ldc, m, n, k, alpha, beta));
+  })();
+
+  (() => {
+    log('gpu version:');
+    const gpu = new GPU();
+    const gpuKernel = gpu.createKernel(gpuFunction)
+      .setOutput([4, 6]);
+    log(gpuKernel(a, b, c, lda, ldb, ldc, m, n, k, alpha, beta));
+  })();
+
+  (() => {
+    log('exported gpu version:');
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const webgl = canvas.getContext('webgl2');
+    const kernel = gpuFunctionExported();
+    kernel.setCanvas(canvas);
+    kernel.setWebGl(webgl);
+    log(kernel(a, b, c, lda, ldb, ldc, m, n, k, alpha, beta));
+  })();
+
+  (() => {
+    log('raw gpu version:');
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const webgl = canvas.getContext('webgl2');
+    const gpuKernel = gpuFunctionRaw(webgl, canvas);
+    log(gpuKernel(a, b, c, lda, ldb, ldc, m, n, k, alpha, beta));
+  })();
+</script>
+</html>
